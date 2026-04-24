@@ -1,11 +1,19 @@
 @import "tailwindcss";
 
+@theme {
+  /* This replaces the 'extend' section of the old tailwind.config.js */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  
+  /* You can also define your Agrikultura colors here if you want to reuse them */
+  --color-agri-green: #059669; /* emerald-600 */
+}
+
 @layer base {
   body {
-    @apply bg-zinc-100 text-zinc-900 antialiased;
+    @apply bg-zinc-50 text-emerald-950 font-sans antialiased;
   }
 
   #root {
-    @apply min-h-screen;
+    @apply min-h-screen flex flex-col;
   }
 }

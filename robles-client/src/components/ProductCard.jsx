@@ -1,22 +1,52 @@
-import Button from './Button';
+import Button from './Button.jsx';
 
 const ProductCard = ({ product, index }) => {
   return (
-    <article className="rounded-3xl border-2 border-zinc-900 bg-zinc-100 p-4">
-      <div className="flex aspect-4/3 items-center justify-center rounded-[1.25rem] bg-zinc-200">
-        <div className="flex h-16 w-16 items-center justify-center border-2 border-zinc-300 bg-zinc-100 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-          Item
+    <article className="group relative rounded-3xl border-2 border-emerald-900 bg-white p-4 transition-all hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(6,78,59,1)]">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-50">
+        <img 
+          src={product.image} 
+          alt={product.title} 
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute left-3 top-3 z-10">
+          <span className="rounded-full border-2 border-emerald-900 bg-emerald-100 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-900">
+            {product.stock}
+          </span>
         </div>
       </div>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-zinc-500">
-        {product.category} {String(index + 1).padStart(2, '0')}
-      </p>
-      <h3 className="mt-2 text-lg font-semibold text-zinc-900">{product.title}</h3>
-      <p className="mt-2 text-base font-bold text-zinc-900">{product.price}</p>
-      <p className="mt-3 text-sm leading-6 text-zinc-600">
-        {product.content[0].substring(0, 120)}...
-      </p>
-      <Button to={`/products/${product.name}`} className="mt-4">View Product</Button>
+
+      <div className="mt-5 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600">
+            {product.category}
+          </p>
+          <span className="text-[10px] font-bold text-emerald-900/30">
+            #{String(index + 1).padStart(2, '0')}
+          </span>
+        </div>
+
+        <h3 className="text-xl font-black leading-tight text-emerald-950">
+          {product.title}
+        </h3>
+
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-black text-emerald-700">{product.price}</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-900/40">/ unit</span>
+        </div>
+
+        {/* Failsafe added here */}
+        <p className="line-clamp-2 text-sm leading-relaxed text-emerald-800/70">
+          {product?.content?.[0] || "Fresh local produce."}
+        </p>
+
+        <Button 
+          to={`/products/${product.name}`} 
+          className="mt-4 w-full border-emerald-900 bg-emerald-600 py-4 text-xs font-black text-white hover:bg-emerald-700"
+        >
+          View Harvest
+        </Button>
+      </div>
     </article>
   );
 };
