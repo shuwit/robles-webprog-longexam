@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 
 const inputClasses =
@@ -8,6 +9,44 @@ const actionButtonClassName =
   "w-full rounded-xl py-3 text-[11px] tracking-[0.2em]";
 
 const SignUpPage = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  
+  const navigate = useNavigate();
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `${firstName} ${lastName}`,
+          email,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Account created successfully!");
+        navigate("/auth/signin");
+      } else {
+        setError(data.message || "Failed to create account");
+      }
+    } catch (err) {
+      setError("Server error. Please try again later.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#070546] text-[#d4af37] px-6 py-10 sm:px-12">
       <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Sign Up</h1>
@@ -16,7 +55,8 @@ const SignUpPage = () => {
         Create a BulldogEx Shop account for faster checkout, order updates, and
         campus pickup details.
       </p>
-      <form className="mt-10 space-y-5 max-w-2xl">
+      <form onSubmit={submitHandler} className="mt-10 space-y-5 max-w-2xl">
+        {error && <p className="text-red-500 text-sm">{error}</p>}
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <label className="text-sm text-[#f5d98b]">First Name</label>
@@ -24,6 +64,9 @@ const SignUpPage = () => {
               type="text"
               placeholder="First name"
               className={inputClasses}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
             />
           </div>
 
@@ -33,6 +76,9 @@ const SignUpPage = () => {
               type="text"
               placeholder="Last name"
               className={inputClasses}
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
             />
           </div>
         </div>
@@ -43,6 +89,9 @@ const SignUpPage = () => {
             type="email"
             placeholder="student@email.com"
             className={inputClasses}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
 
@@ -52,6 +101,9 @@ const SignUpPage = () => {
             type="password"
             placeholder="Password"
             className={inputClasses}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
           <p className="mt-2 text-xs text-[#f5d98b]/60">
             Use a secure password with letters, numbers, and symbols.

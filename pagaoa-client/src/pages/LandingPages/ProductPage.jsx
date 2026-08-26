@@ -94,7 +94,7 @@ function ProductPage() {
             ))}
           </div>
           <div className="mt-6 flex gap-3 border-t border-[#d4af37]/20 pt-4">
-            <Button className="flex-1 bg-[#d4af37] text-[#070546] hover:bg-[#f5d98b]">
+            <Button onClick={() => alert(`${product.title} added to cart!`)} className="flex-1 bg-[#d4af37] text-[#070546] hover:bg-[#f5d98b]">
               Add to Cart
             </Button>
 

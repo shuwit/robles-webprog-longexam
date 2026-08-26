@@ -5,6 +5,7 @@ import ProductPage from "./pages/LandingPages/ProductPage";
 import HomePage from "./pages/LandingPages/HomePage";
 import AboutPage from "./pages/LandingPages/AboutPage";
 import ProductListPage from "./pages/LandingPages/ProductListPage";
+import CartPage from "./pages/LandingPages/CartPage";
 
 import AuthLayout from "./layouts/AuthLayout";
 import SignInPage from "./pages/AuthPages/SignInPage";
@@ -33,6 +34,10 @@ const routes = [
       {
         path: "products/:name",
         element: <ProductPage />,
+      },
+      {
+        path: "cart",
+        element: <CartPage />,
       },
     ],
   },

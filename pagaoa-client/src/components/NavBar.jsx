@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import logo from "../assets/img/nubdexchange_logo.png";
 
 const links = [
   { label: "Home", to: "/" },
   { label: "About", to: "/about" },
   { label: "Products", to: "/products" },
+  { label: "Cart", to: "/cart" },
 ];
 
 const navLinkClassName = ({ isActive }) =>
@@ -46,6 +47,14 @@ const TopBar = () => {
 };
 
 const NavBar = () => {
+  const location = useLocation(); // trigger re-render on route change
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+  const logoutHandler = () => {
+    localStorage.removeItem("userInfo");
+    window.location.href = "/auth/signin"; // Force full page reload to clear state
+  };
+
   return (
     <>
       <TopBar />
@@ -66,9 +75,20 @@ const NavBar = () => {
               </NavLink>
             ))}
 
-            <NavLink to="/auth/signin" className={loginClassName}>
-              Login
-            </NavLink>
+            {userInfo ? (
+              <div className="flex items-center gap-4">
+                <span className="text-[#fef6e9] text-sm font-semibold">
+                  Hi, {userInfo.name}
+                </span>
+                <button onClick={logoutHandler} className={loginClassName({ isActive: false })}>
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <NavLink to="/auth/signin" className={loginClassName}>
+                Login
+              </NavLink>
+            )}
           </nav>
         </div>
       </header>

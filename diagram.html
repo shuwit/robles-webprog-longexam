@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collection Relationship Diagram</title>
+    <!-- Load Mermaid -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        // Initialize Mermaid with a default (white) theme
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: 'arial, sans-serif'
+        });
+    </script>
+    <style>
+        body {
+            background-color: white; /* Force white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .diagram-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <!-- The Mermaid ER Diagram -->
+        <div class="mermaid">
+erDiagram
+    USER ||--o{ ORDER : "places (1:M)"
+    USER ||--o{ CART : "owns (1:1)"
+    USER ||--o{ REVIEW : "writes (1:M)"
+    
+    PRODUCT }o--|| CATEGORY : "belongs to (M:1)"
+    PRODUCT ||--o{ REVIEW : "has (1:M)"
+    
+    ORDER ||--|{ ORDER_ITEM : "embeds"
+    ORDER_ITEM }o--|| PRODUCT : "references (M:1)"
+    
+    CART ||--|{ CART_ITEM : "embeds"
+    CART_ITEM }o--|| PRODUCT : "references (M:1)"
+
+    USER {
+        ObjectId _id
+        String name
+        String email
+        String password
+        Boolean isAdmin
+    }
+    
+    CATEGORY {
+        ObjectId _id
+        String name
+        String description
+    }
+    
+    PRODUCT {
+        ObjectId _id
+        String name
+        String description
+        Number price
+        Number stock
+        String image
+        ObjectId category FK
+    }
+
+    CART {
+        ObjectId _id
+        ObjectId user FK
+    }
+    
+    CART_ITEM {
+        ObjectId product FK
+        Number qty
+    }
+    
+    ORDER {
+        ObjectId _id
+        ObjectId user FK
+        String shippingAddress
+        String paymentMethod
+        Number totalPrice
+        Boolean isPaid
+        Boolean isDelivered
+    }
+    
+    ORDER_ITEM {
+        ObjectId product FK
+        Number qty
+    }
+    
+    REVIEW {
+        ObjectId _id
+        ObjectId user FK
+        ObjectId product FK
+        String name
+        Number rating
+        String comment
+    }
+        </div>
+    </div>
+</body>
+</html>

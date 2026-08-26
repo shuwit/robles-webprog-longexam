@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 
 const inputClasses =
@@ -8,6 +9,40 @@ const actionButtonClassName =
   "w-full rounded-xl py-3 text-[11px] tracking-[0.2em]";
 
 const SignInPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  
+  const navigate = useNavigate();
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("/api/users/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Save user info and token to localStorage
+        localStorage.setItem("userInfo", JSON.stringify(data));
+        alert("Logged in successfully!");
+        navigate("/"); // Redirect to home
+      } else {
+        setError(data.message || "Invalid email or password");
+      }
+    } catch (err) {
+      setError("Server error. Please try again later.");
+    }
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight text-[#d4af37] sm:text-4xl">
@@ -19,13 +54,17 @@ const SignInPage = () => {
         details.
       </p>
 
-      <form className="mt-8 space-y-5">
+      <form onSubmit={submitHandler} className="mt-8 space-y-5">
+        {error && <p className="text-red-500 text-sm">{error}</p>}
         <div>
           <label className="text-sm text-[#f5d98b]">Email Address</label>
           <input
             type="email"
             placeholder="student@email.com"
             className={inputClasses}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
 
@@ -35,6 +74,9 @@ const SignInPage = () => {
             type="password"
             placeholder="Password"
             className={inputClasses}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <p className="mt-2 text-xs text-[#f5d98b]/60">
