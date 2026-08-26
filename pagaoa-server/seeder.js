@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import User from './models/userModel.js';
 import Category from './models/categoryModel.js';
+import Supplier from './models/supplierModel.js';
 import Product from './models/productModel.js';
 import Cart from './models/cartModel.js';
 import Order from './models/orderModel.js';
@@ -10,183 +10,215 @@ import Review from './models/reviewModel.js';
 
 dotenv.config();
 
-connectDB();
-
 const importData = async () => {
   try {
-    // 1. Clear existing data
+    await connectDB();
+
     await Order.deleteMany();
     await Cart.deleteMany();
     await Review.deleteMany();
     await Product.deleteMany();
+    await Supplier.deleteMany();
     await Category.deleteMany();
     await User.deleteMany();
-    
-    console.log('Old Data Destroyed!');
 
-    // 2. Insert 3 Users
-    const users = [
-      { name: 'Admin User', email: 'admin@email.com', password: 'password123' },
-      { name: 'John Doe', email: 'john@email.com', password: 'password123' },
-      { name: 'Jane Smith', email: 'jane@email.com', password: 'password123' }
-    ];
-    
-    const createdUsers = await User.insertMany(users);
-    console.log('3 Sample Users Inserted!');
-    
-    const adminUserId = createdUsers[0]._id;
-    const johnUserId = createdUsers[1]._id;
+    console.log('Old data destroyed');
 
-    // 3. Insert 3 Categories
-    const categories = [
-      { name: 'Apparel', description: 'Clothing and accessories' },
-      { name: 'Electronics', description: 'Gadgets and tech' },
-      { name: 'Accessories', description: 'Bags and caps' }
-    ];
-    
-    const createdCategories = await Category.insertMany(categories);
-    console.log('3 Sample Categories Inserted!');
-    
-    const apparelId = createdCategories[0]._id;
-    const electronicsId = createdCategories[1]._id;
-    const accessoriesId = createdCategories[2]._id;
-
-    // 4. Insert 3 Products
-    const products = [
+    const createdUsers = await User.create([
       {
-        name: 'Bulldog Hoodie',
-        description: 'Warm and comfortable hoodie with Bulldog logo.',
-        price: 35.99,
-        category: apparelId,
-        stock: 50,
-        image: 'https://via.placeholder.com/300?text=Bulldog+Hoodie'
+        name: 'Admin User',
+        email: 'admin@email.com',
+        password: 'password123',
+        isAdmin: true,
       },
       {
-        name: 'Bulldog Laptop Sticker',
-        description: 'High quality vinyl sticker.',
-        price: 3.99,
-        category: electronicsId,
-        stock: 200,
-        image: 'https://via.placeholder.com/300?text=Bulldog+Sticker'
+        name: 'John Doe',
+        email: 'john@email.com',
+        password: 'password123',
+        isAdmin: false,
+      },
+      {
+        name: 'Jane Smith',
+        email: 'jane@email.com',
+        password: 'password123',
+        isAdmin: false,
+      },
+    ]);
+
+    console.log('3 Users inserted');
+
+    const createdCategories = await Category.insertMany([
+      { name: 'Apparel', description: 'Campus clothing and uniforms' },
+      { name: 'Electronics', description: 'Gadgets and student tech' },
+      { name: 'Accessories', description: 'Bags, caps, and everyday extras' },
+    ]);
+
+    console.log('3 Categories inserted');
+
+    const createdSuppliers = await Supplier.insertMany([
+      { name: 'Nike', description: 'Athletic apparel and campus wear' },
+      { name: 'Adidas', description: 'Sports gear and student essentials' },
+      { name: 'Campus Supply Co', description: 'School merchandise and accessories' },
+    ]);
+
+    console.log('3 Suppliers inserted');
+
+    const createdProducts = await Product.insertMany([
+      {
+        name: 'Bulldog Hoodie',
+        description: 'Warm campus hoodie (jacket-style) with embroidered Bulldog crest.',
+        price: 1499,
+        stock: 50,
+        image:
+          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80',
+        category: createdCategories[0]._id,
+        supplier: createdSuppliers[0]._id,
+      },
+      {
+        name: 'Campus Laptop Sleeve',
+        description: 'Padded sleeve that keeps notebooks and laptops protected.',
+        price: 799,
+        stock: 80,
+        image:
+          'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=800&q=80',
+        category: createdCategories[1]._id,
+        supplier: createdSuppliers[1]._id,
       },
       {
         name: 'Bulldog Tumbler',
-        description: 'Keep your coffee hot during classes.',
-        price: 15.99,
-        category: accessoriesId,
+        description: 'Insulated tumbler that keeps coffee hot through lectures.',
+        price: 549,
         stock: 30,
-        image: 'https://via.placeholder.com/300?text=Bulldog+Tumbler'
-      }
-    ];
-
-    const createdProducts = await Product.insertMany(products);
-    console.log('3 Sample Products Inserted!');
-
-    // 5. Insert 3 Carts (one for each user, with some products)
-    const carts = [
-      {
-        user: adminUserId,
-        items: [
-          { product: createdProducts[0]._id, quantity: 2 },
-          { product: createdProducts[1]._id, quantity: 1 }
-        ]
+        image:
+          'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=800&q=80',
+        category: createdCategories[2]._id,
+        supplier: createdSuppliers[2]._id,
       },
-      {
-        user: johnUserId,
-        items: [
-          { product: createdProducts[2]._id, quantity: 1 }
-        ]
-      },
-      {
-        user: createdUsers[2]._id, // Jane
-        items: [
-          { product: createdProducts[0]._id, quantity: 1 },
-          { product: createdProducts[2]._id, quantity: 2 }
-        ]
-      }
-    ];
+    ]);
 
-    await Cart.insertMany(carts);
-    console.log('3 Sample Carts Inserted!');
+    console.log('3 Products inserted');
 
-    // 6. Insert 3 Orders
-    const orders = [
+    await Cart.insertMany([
       {
-        user: adminUserId,
-        orderItems: [
-          { product: createdProducts[0]._id, qty: 1, name: createdProducts[0].name, image: createdProducts[0].image, price: createdProducts[0].price }
+        user: createdUsers[0]._id,
+        cartItems: [
+          { product: createdProducts[0]._id, qty: 2 },
+          { product: createdProducts[1]._id, qty: 1 },
         ],
-        shippingAddress: { address: '123 Main St', city: 'Manila', postalCode: '1000', country: 'Philippines' },
+      },
+      {
+        user: createdUsers[1]._id,
+        cartItems: [{ product: createdProducts[2]._id, qty: 1 }],
+      },
+      {
+        user: createdUsers[2]._id,
+        cartItems: [
+          { product: createdProducts[0]._id, qty: 1 },
+          { product: createdProducts[2]._id, qty: 2 },
+        ],
+      },
+    ]);
+
+    console.log('3 Carts inserted');
+
+    await Order.insertMany([
+      {
+        user: createdUsers[0]._id,
+        orderItems: [
+          {
+            product: createdProducts[0]._id,
+            name: createdProducts[0].name,
+            image: createdProducts[0].image,
+            price: createdProducts[0].price,
+            qty: 1,
+          },
+        ],
+        shippingAddress: {
+          address: '123 Main St',
+          city: 'Manila',
+          postalCode: '1000',
+          country: 'Philippines',
+        },
         paymentMethod: 'PayPal',
-        taxPrice: 0,
-        shippingPrice: 5,
-        totalPrice: createdProducts[0].price + 5,
+        totalPrice: createdProducts[0].price,
         isPaid: true,
-        paidAt: new Date(),
-        isDelivered: false
+        isDelivered: false,
       },
       {
-        user: johnUserId,
+        user: createdUsers[1]._id,
         orderItems: [
-          { product: createdProducts[1]._id, qty: 2, name: createdProducts[1].name, image: createdProducts[1].image, price: createdProducts[1].price }
+          {
+            product: createdProducts[1]._id,
+            name: createdProducts[1].name,
+            image: createdProducts[1].image,
+            price: createdProducts[1].price,
+            qty: 2,
+          },
         ],
-        shippingAddress: { address: '456 Taft Ave', city: 'Manila', postalCode: '1004', country: 'Philippines' },
-        paymentMethod: 'Stripe',
-        taxPrice: 0,
-        shippingPrice: 2,
-        totalPrice: (createdProducts[1].price * 2) + 2,
+        shippingAddress: {
+          address: '456 Taft Ave',
+          city: 'Manila',
+          postalCode: '1004',
+          country: 'Philippines',
+        },
+        paymentMethod: 'GCash',
+        totalPrice: createdProducts[1].price * 2,
         isPaid: false,
-        isDelivered: false
+        isDelivered: false,
       },
       {
-        user: createdUsers[2]._id, // Jane
+        user: createdUsers[2]._id,
         orderItems: [
-          { product: createdProducts[2]._id, qty: 1, name: createdProducts[2].name, image: createdProducts[2].image, price: createdProducts[2].price }
+          {
+            product: createdProducts[2]._id,
+            name: createdProducts[2].name,
+            image: createdProducts[2].image,
+            price: createdProducts[2].price,
+            qty: 1,
+          },
         ],
-        shippingAddress: { address: '789 EDSA', city: 'Quezon City', postalCode: '1100', country: 'Philippines' },
-        paymentMethod: 'Cash On Delivery',
-        taxPrice: 0,
-        shippingPrice: 0,
+        shippingAddress: {
+          address: '789 EDSA',
+          city: 'Quezon City',
+          postalCode: '1100',
+          country: 'Philippines',
+        },
+        paymentMethod: 'Cash on Delivery',
         totalPrice: createdProducts[2].price,
         isPaid: false,
         isDelivered: true,
-        deliveredAt: new Date()
-      }
-    ];
+      },
+    ]);
 
-    await Order.insertMany(orders);
-    console.log('3 Sample Orders Inserted!');
+    console.log('3 Orders inserted');
 
-    // 7. Insert 3 Reviews
-    const reviews = [
+    await Review.insertMany([
       {
-        user: adminUserId,
+        user: createdUsers[0]._id,
         product: createdProducts[0]._id,
-        name: 'Admin User',
+        name: createdUsers[0].name,
         rating: 5,
-        comment: 'Amazing hoodie, very comfortable!'
+        comment: 'Amazing hoodie, very comfortable.',
       },
       {
-        user: johnUserId,
+        user: createdUsers[1]._id,
         product: createdProducts[1]._id,
-        name: 'John Doe',
+        name: createdUsers[1].name,
         rating: 4,
-        comment: 'Great sticker but took a while to arrive.'
+        comment: 'Great sleeve, fits my laptop perfectly.',
       },
       {
         user: createdUsers[2]._id,
         product: createdProducts[2]._id,
-        name: 'Jane Smith',
+        name: createdUsers[2].name,
         rating: 5,
-        comment: 'Keeps my coffee hot all day.'
-      }
-    ];
+        comment: 'Keeps my coffee hot all day.',
+      },
+    ]);
 
-    await Review.insertMany(reviews);
-    console.log('3 Sample Reviews Inserted!');
-
-    console.log('✅ ALL DATA SUCCESSFULLY SEEDED!');
-    process.exit();
+    console.log('3 Reviews inserted');
+    console.log('All data successfully seeded');
+    process.exit(0);
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

@@ -5,31 +5,36 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      index: true, // Optimized for search
-    },
-    image: {
-      type: String,
-      required: true,
+      trim: true,
+      index: true,
     },
     description: {
       type: String,
       required: true,
-    },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'Category', // Referenced Document Relationship
-      index: true,
     },
     price: {
       type: Number,
       required: true,
       default: 0,
     },
-    countInStock: {
+    stock: {
       type: Number,
       required: true,
       default: 0,
+    },
+    image: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Category',
+    },
+    supplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Supplier',
     },
   },
   {

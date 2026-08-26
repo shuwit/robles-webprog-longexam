@@ -1,43 +1,50 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Button from "./Button";
+import { useAuth } from "../context/AuthContext";
+import { addToCartRequest } from "../utils/api";
 
-const images = import.meta.glob("../assets/img/*", {
-  eager: true,
-  import: "default",
-});
+const formatPrice = (price) =>
+  `₱${Number(price).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
 
-const img = Object.fromEntries(
-  Object.entries(images).map(([path, value]) => {
-    const name = path.split("/").pop();
-    return [name, value];
-  }),
-);
+const ProductCard = ({ product, onAdded }) => {
+  const { userInfo } = useAuth();
+  const navigate = useNavigate();
 
-const ProductCard = ({ product }) => {
+  const handleAddToCart = async () => {
+    if (!userInfo) {
+      navigate("/auth/signin");
+      return;
+    }
+
+    try {
+      await addToCartRequest(userInfo, product._id, 1);
+      onAdded?.(`${product.name} added to cart`);
+    } catch (error) {
+      onAdded?.(error.message, true);
+    }
+  };
+
   return (
-    <div className="overflow-hidden rounded-2xl bg-[#0b0a2f] border border-[#d4af37]/10 hover:shadow-xl transition">
-      <img
-        src={img[product.image]}
-        alt={product.title}
-        className="h-64 w-full object-cover"
-      />
-
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-[#d4af37]">
-          {product.title}
-        </h3>
-
-        <p className="mt-1 text-sm text-[#f5d98b]/70">{product.category}</p>
-
-        <p className="mt-2 text-sm text-[#f5d98b]">{product.price}</p>
-
-        <Link to={`/products/${product.name}`}>
-          <Button className="mt-4 w-full bg-[#d4af37] text-[#070546] hover:bg-[#f5d98b]">
-            View Product
+    <article className="product-card">
+      <img src={product.image} alt={product.name} />
+      <div className="card-body">
+        <p className="kicker">{product.category?.name || "Campus"}</p>
+        <h3>{product.name}</h3>
+        <p className="muted">{product.description}</p>
+        <p className="price">{formatPrice(product.price)}</p>
+        <span className="stock-chip">{product.stock} in stock</span>
+        <div className="card-actions">
+          <Button className="btn-block" onClick={handleAddToCart}>
+            Add to Cart
           </Button>
-        </Link>
+        </div>
+        <div className="card-actions">
+          <Button to={`/products/${product._id}`} variant="outline" className="btn-block">
+            View Details
+          </Button>
+        </div>
       </div>
-    </div>
+    </article>
   );
 };
 

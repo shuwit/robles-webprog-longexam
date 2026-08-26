@@ -1,10 +1,14 @@
 import ProductCard from "./ProductCard";
 
-const ProductList = ({ products }) => {
+const ProductList = ({ products, onAdded }) => {
+  if (!products.length) {
+    return <p className="muted">No products available yet.</p>;
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-      {products.map((product, index) => (
-        <ProductCard key={product.name} product={product} index={index} />
+    <div className="product-grid">
+      {products.map((product) => (
+        <ProductCard key={product._id} product={product} onAdded={onAdded} />
       ))}
     </div>
   );

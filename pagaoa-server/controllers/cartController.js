@@ -1,62 +1,117 @@
 import Cart from '../models/cartModel.js';
 import Product from '../models/productModel.js';
+import { HttpStatus } from '../config/constants.js';
 
-// @desc    Add item to cart
-// @route   POST /api/cart/add
-// @access  Public / Protected
-export const addToCart = async (req, res) => {
-  const { userId, productId, qty } = req.body;
+const populateCart = (query) =>
+  query.populate({
+    path: 'cartItems.product',
+    populate: { path: 'category', select: 'name' },
+  });
 
+export const getCarts = async (req, res) => {
   try {
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    let cart = await Cart.findOne({ user: userId });
-
-    // If no cart exists for user, create one
-    if (!cart) {
-      cart = await Cart.create({
-        user: userId,
-        cartItems: [{ product: productId, qty: qty || 1 }],
-      });
-      return res.status(201).json(cart);
-    }
-
-    // If cart exists, check if product is already in the cart
-    const itemIndex = cart.cartItems.findIndex(
-      (item) => item.product.toString() === productId
-    );
-
-    if (itemIndex > -1) {
-      // Product exists, update quantity
-      cart.cartItems[itemIndex].qty += qty || 1;
-    } else {
-      // Product doesn't exist in cart, add it
-      cart.cartItems.push({ product: productId, qty: qty || 1 });
-    }
-
-    await cart.save();
-    res.status(200).json(cart);
+    const carts = await populateCart(Cart.find({}));
+    res.status(HttpStatus.OK).json(carts);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
-// @desc    Get user cart
-// @route   GET /api/cart/:userId
-// @access  Public / Protected
-export const getCart = async (req, res) => {
+export const getCartByUser = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.params.userId }).populate(
-      'cartItems.product'
-    );
+    const cart = await populateCart(Cart.findOne({ user: req.params.userId }));
+
     if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
+      return res.status(HttpStatus.OK).json({ user: req.params.userId, cartItems: [] });
     }
-    res.status(200).json(cart);
+
+    res.status(HttpStatus.OK).json(cart);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+  }
+};
+
+export const addToCart = async (req, res) => {
+  const { userId, productId, qty = 1 } = req.body;
+  const ownerId = req.user?._id || userId;
+
+  try {
+    if (!ownerId) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ message: 'User is required' });
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Product not found' });
+    }
+
+    let cart = await Cart.findOne({ user: ownerId });
+
+    if (!cart) {
+      cart = await Cart.create({
+        user: ownerId,
+        cartItems: [{ product: productId, qty }],
+      });
+    } else {
+      const itemIndex = cart.cartItems.findIndex(
+        (item) => item.product.toString() === productId
+      );
+
+      if (itemIndex > -1) {
+        cart.cartItems[itemIndex].qty += Number(qty) || 1;
+      } else {
+        cart.cartItems.push({ product: productId, qty: Number(qty) || 1 });
+      }
+
+      await cart.save();
+    }
+
+    const populated = await populateCart(Cart.findById(cart._id));
+    res.status(HttpStatus.OK).json(populated);
+  } catch (error) {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+  }
+};
+
+export const updateCartItem = async (req, res) => {
+  const { productId, qty } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ user: req.params.userId });
+
+    if (!cart) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Cart not found' });
+    }
+
+    const item = cart.cartItems.find(
+      (cartItem) => cartItem.product.toString() === productId
+    );
+
+    if (!item) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Item not found in cart' });
+    }
+
+    item.qty = qty;
+    await cart.save();
+
+    const populated = await populateCart(Cart.findById(cart._id));
+    res.status(HttpStatus.OK).json(populated);
+  } catch (error) {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+  }
+};
+
+export const deleteCart = async (req, res) => {
+  try {
+    const cart = await Cart.findOneAndDelete({ user: req.params.userId });
+
+    if (!cart) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Cart not found' });
+    }
+
+    res.status(HttpStatus.OK).json({ message: 'Cart cleared' });
+  } catch (error) {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };

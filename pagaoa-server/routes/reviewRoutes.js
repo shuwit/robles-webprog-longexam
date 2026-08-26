@@ -1,8 +1,22 @@
 import express from 'express';
-import { getProductReviews } from '../controllers/reviewController.js';
+import {
+  getReviews,
+  getReviewById,
+  getReviewsByProduct,
+  createReview,
+  updateReview,
+  deleteReview,
+} from '../controllers/reviewController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/:productId', getProductReviews);
+router.route('/').get(getReviews).post(protect, createReview);
+router.get('/product/:productId', getReviewsByProduct);
+router
+  .route('/:id')
+  .get(getReviewById)
+  .put(protect, updateReview)
+  .delete(protect, deleteReview);
 
 export default router;

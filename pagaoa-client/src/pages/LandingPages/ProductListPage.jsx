@@ -1,61 +1,76 @@
-import Button from "../../components/Button.jsx";
-import ProductList from "../../components/ProductList.jsx";
-import products from "../../assets/product-content.js";
+import { useEffect, useState } from "react";
+import ProductList from "../../components/ProductList";
+import Button from "../../components/Button";
+import { unwrapProducts } from "../../utils/api";
 
 const ProductListPage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to load products");
+        }
+        setProducts(unwrapProducts(data));
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
-    <div className="flex w-full flex-col bg-[#070546] text-[#d4af37]">
-      <section className="relative overflow-hidden">
+    <div className="page">
+      <section className="hero">
         <img
           src="https://images.candymag.com/candy/images/2022/01/24/national-university-ph.jpg"
-          alt="Products Hero"
-          className="h-[83vh] w-full object-cover"
+          alt="Products hero"
         />
-
-        <div className="absolute inset-0 bg-black/40" />
-
-        <div className="absolute inset-0 flex items-center justify-start px-6 sm:px-12">
-          <div className="max-w-xl [text-shadow:2px_2px_10px_rgba(0,0,0,0.85)]">
-            <p className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#f5d98b]">
-              Products
-            </p>
-
-            <h1 className="mt-3 text-4xl font-bold sm:text-5xl">
-              Explore Campus Essentials
-            </h1>
-
-            <p className="mt-4 text-sm text-[#f5d98b] sm:text-base">
+        <div className="hero-overlay" />
+        <div className="hero-copy left">
+          <div className="hero-copy-inner">
+            <p className="kicker">Products</p>
+            <h1>Explore Campus Essentials</h1>
+            <p>
               Browse uniforms, merchandise, and student essentials in one
               convenient place.
             </p>
-
-            <div className="mt-6">
-              <Button
-                to="/"
-                className="bg-[#d4af37] text-[#070546] hover:bg-[#f5d98b]"
-              >
-                Back Home
-              </Button>
+            <div className="hero-actions">
+              <Button to="/">Back Home</Button>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="px-6 py-16 sm:px-12">
-        <div className="mb-10">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-[#d4af37]/70">
-            Featured Collection
-          </p>
-
-          <h2 className="mt-2 text-2xl font-semibold">Product Selection</h2>
-
-          <p className="mt-3 max-w-2xl text-sm text-[#f5d98b]/70">
-            Discover products selected for student convenience, quality, and
-            everyday campus use.
-          </p>
+      <section className="section">
+        <div className="container">
+          <p className="kicker">Featured Collection</p>
+          <h2 className="section-title">Product Selection</h2>
+          {message && <p className="success">{message}</p>}
+          {error && <p className="error">{error}</p>}
+          {loading ? (
+            <p className="muted">Loading products...</p>
+          ) : (
+            <div style={{ marginTop: 28 }}>
+              <ProductList
+                products={products}
+                onAdded={(text, isError) => {
+                  setError(isError ? text : "");
+                  setMessage(isError ? "" : text);
+                }}
+              />
+            </div>
+          )}
         </div>
-
-        <ProductList products={products} />
       </section>
     </div>
   );

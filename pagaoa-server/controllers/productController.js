@@ -1,29 +1,74 @@
 import Product from '../models/productModel.js';
+import { HttpStatus } from '../config/constants.js';
+import { listProducts, getPopulatedProduct } from '../utils/productQuery.js';
 
-// @desc    Fetch all products
-// @route   GET /api/products
-// @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({}).populate('category', 'name');
-    res.json(products);
+    const result = await listProducts(req.query);
+    res.status(HttpStatus.OK).json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
-// @desc    Fetch single product
-// @route   GET /api/products/:id
-// @access  Public
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category', 'name');
-    if (product) {
-      res.json(product);
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    const product = await getPopulatedProduct(req.params.id);
+
+    if (!product) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Product not found' });
     }
+
+    res.status(HttpStatus.OK).json(product);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+  }
+};
+
+export const createProduct = async (req, res) => {
+  try {
+    const product = await Product.create(req.body);
+    res.status(HttpStatus.CREATED).json(product);
+  } catch (error) {
+    const status =
+      error.name === 'ValidationError'
+        ? HttpStatus.BAD_REQUEST
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+    res.status(status).json({ message: error.message });
+  }
+};
+
+export const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!product) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Product not found' });
+    }
+
+    res.status(HttpStatus.OK).json(product);
+  } catch (error) {
+    const status =
+      error.name === 'ValidationError'
+        ? HttpStatus.BAD_REQUEST
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+    res.status(status).json({ message: error.message });
+  }
+};
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Product not found' });
+    }
+
+    res.status(HttpStatus.OK).json({ message: 'Product removed' });
+  } catch (error) {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };

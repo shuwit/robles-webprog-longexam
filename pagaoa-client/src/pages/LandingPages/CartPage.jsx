@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../components/Button";
+import { useAuth } from "../../context/AuthContext";
+
+const formatPrice = (price) =>
+  `₱${Number(price).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
 
 function CartPage() {
+  const { userInfo } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
   useEffect(() => {
     if (!userInfo) {
@@ -17,15 +20,18 @@ function CartPage() {
 
     const fetchCart = async () => {
       try {
-        const res = await fetch(`/api/cart/${userInfo._id}`);
+        const res = await fetch(`/api/cart/${userInfo._id}`, {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        });
         const data = await res.json();
-        if (res.ok && data.cartItems) {
-          setCartItems(data.cartItems);
-        } else {
-          setCartItems([]);
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to load cart");
         }
+        setCartItems(data.cartItems || []);
       } catch (err) {
-        setError("Failed to load cart");
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -36,56 +42,67 @@ function CartPage() {
 
   if (!userInfo) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#070546] text-[#d4af37]">
-        <h1 className="text-3xl font-bold mb-4">Your Cart</h1>
-        <p className="mb-6 text-[#f5d98b]/80">Please log in to view your cart.</p>
-        <Button to="/auth/signin" className="bg-[#d4af37] text-[#070546] px-6 py-2 rounded-lg">
-          Log In
-        </Button>
+      <div className="empty-state">
+        <h1>Your Cart</h1>
+        <p className="muted">Please log in to view your cart.</p>
+        <Button to="/auth/signin">Log In</Button>
       </div>
     );
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-[#070546] text-[#d4af37] p-10">Loading cart...</div>;
+    return <div className="status-block">Loading cart...</div>;
   }
 
   if (error) {
-    return <div className="min-h-screen bg-[#070546] text-red-500 p-10">{error}</div>;
+    return <div className="status-block error">{error}</div>;
   }
 
+  const total = cartItems.reduce((sum, item) => {
+    const price = item.product?.price || 0;
+    return sum + price * item.qty;
+  }, 0);
+
   return (
-    <div className="min-h-screen bg-[#070546] text-[#d4af37] px-6 py-10 sm:px-12 pt-24">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl mb-8">Shopping Cart</h1>
+    <div className="page section">
+      <div className="container">
+        <p className="kicker">Checkout</p>
+        <h1 className="section-title">Shopping Cart</h1>
 
-      {cartItems.length === 0 ? (
-        <div>
-          <p className="text-[#f5d98b]/80 mb-4">Your cart is completely empty.</p>
-          <Link to="/products" className="text-[#d4af37] hover:underline font-bold">
-            Go Shopping
-          </Link>
-        </div>
-      ) : (
-        <div className="max-w-4xl mx-auto space-y-4">
-          {cartItems.map((item, index) => (
-            <div key={index} className="flex justify-between items-center bg-[#0b0a2f] p-4 rounded-xl border border-[#d4af37]/20">
-              <div>
-                <h3 className="font-bold">{item.product?.name || "Product Name"}</h3>
-                <p className="text-sm text-[#f5d98b]/70">Quantity: {item.qty}</p>
-              </div>
-              <div className="font-bold text-[#d4af37]">
-                ${(item.product?.price * item.qty).toFixed(2) || "0.00"}
-              </div>
-            </div>
-          ))}
-
-          <div className="flex justify-end mt-8">
-            <Button className="bg-[#d4af37] text-[#070546] px-8 py-3 rounded-xl font-bold hover:bg-[#f5d98b]">
-              Proceed to Checkout
-            </Button>
+        {cartItems.length === 0 ? (
+          <div className="empty-state">
+            <p>Your cart is completely empty.</p>
+            <Link to="/products" className="link">
+              Go Shopping
+            </Link>
           </div>
-        </div>
-      )}
+        ) : (
+          <div>
+            {cartItems.map((item) => (
+              <article key={item._id || item.product?._id} className="cart-item">
+                <div className="cart-item-main">
+                  <img
+                    src={item.product?.image}
+                    alt={item.product?.name || "Product"}
+                  />
+                  <div>
+                    <h3>{item.product?.name || "Product"}</h3>
+                    <p className="muted">Quantity: {item.qty}</p>
+                  </div>
+                </div>
+                <strong>
+                  {formatPrice((item.product?.price || 0) * item.qty)}
+                </strong>
+              </article>
+            ))}
+
+            <div className="cart-total">
+              <h3>Total {formatPrice(total)}</h3>
+              <Button>Proceed to Checkout</Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
