@@ -19,6 +19,10 @@ export const getCarts = async (req, res) => {
 
 export const getCartByUser = async (req, res) => {
   try {
+    if (!req.user.isAdmin && req.params.userId !== req.user._id.toString()) {
+      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Not authorized' });
+    }
+
     const cart = await populateCart(Cart.findOne({ user: req.params.userId }));
 
     if (!cart) {

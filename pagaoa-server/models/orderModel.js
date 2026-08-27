@@ -46,6 +46,12 @@ const orderSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    status: {
+      type: String,
+      required: true,
+      enum: ['pending', 'confirmed', 'ready_for_claiming', 'claimed'],
+      default: 'pending',
+    },
   },
   {
     timestamps: true,

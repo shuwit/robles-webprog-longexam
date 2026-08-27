@@ -22,10 +22,26 @@ export const protect = async (req, res, next) => {
         .json({ message: 'Not authorized, user not found' });
     }
 
+    if (req.user.isActive === false) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        message: 'Account is inactive. Contact an administrator.',
+      });
+    }
+
     next();
   } catch (error) {
     return res
       .status(HttpStatus.UNAUTHORIZED)
       .json({ message: 'Not authorized, token failed' });
   }
+};
+
+export const admin = (req, res, next) => {
+  if (req.user?.isAdmin) {
+    return next();
+  }
+
+  return res
+    .status(HttpStatus.FORBIDDEN)
+    .json({ message: 'Not authorized as admin' });
 };

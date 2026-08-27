@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Button from "../../components/Button";
 import ProductList from "../../components/ProductList";
 import NUstorebg from "../../assets/img/NUstorebg.png";
-import { unwrapProducts } from "../../utils/api";
+import { unwrapProducts, apiRequest } from "../../utils/api";
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
@@ -12,11 +12,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/products");
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to load products");
-        }
+        const data = await apiRequest("/api/products?limit=50");
         setProducts(unwrapProducts(data));
       } catch (err) {
         setError(err.message);

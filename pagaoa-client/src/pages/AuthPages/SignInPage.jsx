@@ -29,7 +29,7 @@ const SignInPage = () => {
       }
 
       login(data);
-      navigate("/");
+      navigate(data.isAdmin ? "/admin/products" : "/");
     } catch {
       setError("Server error. Please try again later.");
     }
@@ -39,7 +39,7 @@ const SignInPage = () => {
     <div>
       <h1>Log In</h1>
       <p className="muted">
-        Access your BulldogEx account to manage orders and your cart.
+        JWT session login. Customers go to the shop; admins go to the admin dashboard.
       </p>
 
       <form onSubmit={submitHandler} className="form">
@@ -70,6 +70,10 @@ const SignInPage = () => {
           Log In
         </Button>
       </form>
+
+      <p className="muted" style={{ marginTop: 16 }}>
+        Demo: john@email.com or admin@email.com / password123
+      </p>
 
       <div className="auth-footer">
         No account yet?{" "}

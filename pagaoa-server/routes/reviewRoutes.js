@@ -7,7 +7,7 @@ import {
   updateReview,
   deleteReview,
 } from '../controllers/reviewController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { admin, protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.get('/product/:productId', getReviewsByProduct);
 router
   .route('/:id')
   .get(getReviewById)
-  .put(protect, updateReview)
-  .delete(protect, deleteReview);
+  .put(protect, admin, updateReview)
+  .delete(protect, admin, deleteReview);
 
 export default router;

@@ -31,6 +31,9 @@ const ProductCard = ({ product, onAdded }) => {
         <p className="kicker">{product.category?.name || "Campus"}</p>
         <h3>{product.name}</h3>
         <p className="muted">{product.description}</p>
+        <p className="schema-meta">
+          Supplier: {product.supplier?.name || "Campus Store"}
+        </p>
         <p className="price">{formatPrice(product.price)}</p>
         <span className="stock-chip">{product.stock} in stock</span>
         <div className="card-actions">

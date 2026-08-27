@@ -41,8 +41,22 @@ export const getReviewsByProduct = async (req, res) => {
 };
 
 export const createReview = async (req, res) => {
+  const { product, rating, comment } = req.body;
+
   try {
-    const review = await Review.create(req.body);
+    if (!product || !rating || !comment) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: 'Product, rating, and comment are required',
+      });
+    }
+
+    const review = await Review.create({
+      user: req.user._id,
+      name: req.user.name,
+      product,
+      rating,
+      comment,
+    });
     res.status(HttpStatus.CREATED).json(review);
   } catch (error) {
     const status =

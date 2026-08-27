@@ -30,18 +30,21 @@ const importData = async () => {
         email: 'admin@email.com',
         password: 'password123',
         isAdmin: true,
+        isActive: true,
       },
       {
         name: 'John Doe',
         email: 'john@email.com',
         password: 'password123',
         isAdmin: false,
+        isActive: true,
       },
       {
         name: 'Jane Smith',
         email: 'jane@email.com',
         password: 'password123',
         isAdmin: false,
+        isActive: true,
       },
     ]);
 
@@ -143,6 +146,7 @@ const importData = async () => {
         totalPrice: createdProducts[0].price,
         isPaid: true,
         isDelivered: false,
+        status: 'confirmed',
       },
       {
         user: createdUsers[1]._id,
@@ -165,6 +169,7 @@ const importData = async () => {
         totalPrice: createdProducts[1].price * 2,
         isPaid: false,
         isDelivered: false,
+        status: 'pending',
       },
       {
         user: createdUsers[2]._id,
@@ -187,6 +192,7 @@ const importData = async () => {
         totalPrice: createdProducts[2].price,
         isPaid: false,
         isDelivered: true,
+        status: 'ready_for_claiming',
       },
     ]);
 

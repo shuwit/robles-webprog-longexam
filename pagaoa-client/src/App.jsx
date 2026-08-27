@@ -6,10 +6,17 @@ import HomePage from "./pages/LandingPages/HomePage";
 import AboutPage from "./pages/LandingPages/AboutPage";
 import ProductListPage from "./pages/LandingPages/ProductListPage";
 import CartPage from "./pages/LandingPages/CartPage";
+import OrdersPage from "./pages/LandingPages/OrdersPage";
+import ProfilePage from "./pages/LandingPages/ProfilePage";
 import AuthLayout from "./layouts/AuthLayout";
 import SignInPage from "./pages/AuthPages/SignInPage";
 import SignUpPage from "./pages/AuthPages/SignUpPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import { AdminRoute, GuestRoute, ProtectedRoute } from "./components/ProtectedRoute";
+import AdminProductsPage from "./pages/AdminPages/AdminProductsPage";
+import AdminOrdersPage from "./pages/AdminPages/AdminOrdersPage";
+import AdminReviewsPage from "./pages/AdminPages/AdminReviewsPage";
+import AdminUsersPage from "./pages/AdminPages/AdminUsersPage";
 
 const routes = [
   {
@@ -21,7 +28,62 @@ const routes = [
       { path: "about", element: <AboutPage /> },
       { path: "products", element: <ProductListPage /> },
       { path: "products/:id", element: <ProductPage /> },
-      { path: "cart", element: <CartPage /> },
+      {
+        path: "cart",
+        element: (
+          <ProtectedRoute>
+            <CartPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "orders",
+        element: (
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/products",
+        element: (
+          <AdminRoute>
+            <AdminProductsPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "admin/orders",
+        element: (
+          <AdminRoute>
+            <AdminOrdersPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "admin/reviews",
+        element: (
+          <AdminRoute>
+            <AdminReviewsPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "admin/users",
+        element: (
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        ),
+      },
     ],
   },
   {
@@ -29,8 +91,22 @@ const routes = [
     element: <AuthLayout />,
     errorElement: <NotFoundPage />,
     children: [
-      { path: "signin", element: <SignInPage /> },
-      { path: "signup", element: <SignUpPage /> },
+      {
+        path: "signin",
+        element: (
+          <GuestRoute>
+            <SignInPage />
+          </GuestRoute>
+        ),
+      },
+      {
+        path: "signup",
+        element: (
+          <GuestRoute>
+            <SignUpPage />
+          </GuestRoute>
+        ),
+      },
     ],
   },
 ];

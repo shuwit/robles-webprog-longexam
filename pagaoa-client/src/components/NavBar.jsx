@@ -60,14 +60,44 @@ const NavBar = () => {
             {userInfo ? (
               <div className="nav-user">
                 <span className="nav-name">Hi, {userInfo.name}</span>
-                <NavLink
-                  to="/cart"
-                  className={({ isActive }) =>
-                    isActive ? "nav-link active" : "nav-link"
-                  }
-                >
-                  Cart
-                </NavLink>
+                <span className="badge">{userInfo.isAdmin ? "Admin" : "Customer"}</span>
+                {userInfo.isAdmin ? (
+                  <NavLink
+                    to="/admin/products"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active" : "nav-link"
+                    }
+                  >
+                    Admin
+                  </NavLink>
+                ) : (
+                  <>
+                    <NavLink
+                      to="/orders"
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                    >
+                      Orders
+                    </NavLink>
+                    <NavLink
+                      to="/cart"
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                    >
+                      Cart
+                    </NavLink>
+                    <NavLink
+                      to="/profile"
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                    >
+                      Profile
+                    </NavLink>
+                  </>
+                )}
                 <button type="button" className="btn btn-ghost" onClick={logoutHandler}>
                   Logout
                 </button>

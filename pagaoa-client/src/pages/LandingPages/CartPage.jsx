@@ -1,44 +1,64 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useAuth } from "../../context/AuthContext";
-
-const formatPrice = (price) =>
-  `₱${Number(price).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+import { apiRequest, formatPrice } from "../../utils/api";
 
 function CartPage() {
   const { userInfo } = useAuth();
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [address, setAddress] = useState("NU Manila Campus");
+  const [city, setCity] = useState("Manila");
+  const [paymentMethod, setPaymentMethod] = useState("Cash on Pickup");
+
+  const loadCart = async () => {
+    try {
+      const data = await apiRequest(`/api/cart/${userInfo._id}`, {
+        token: userInfo.token,
+      });
+      setCartItems(data.cartItems || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!userInfo) {
       setLoading(false);
       return;
     }
-
-    const fetchCart = async () => {
-      try {
-        const res = await fetch(`/api/cart/${userInfo._id}`, {
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to load cart");
-        }
-        setCartItems(data.cartItems || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCart();
+    loadCart();
   }, [userInfo]);
+
+  const checkout = async () => {
+    setError("");
+    try {
+      await apiRequest("/api/orders", {
+        method: "POST",
+        token: userInfo.token,
+        body: {
+          paymentMethod,
+          shippingAddress: {
+            address,
+            city,
+            postalCode: "1008",
+            country: "Philippines",
+          },
+        },
+      });
+      setMessage("Order placed. Track it under Ongoing Orders.");
+      setCartItems([]);
+      navigate("/orders");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   if (!userInfo) {
     return (
@@ -54,10 +74,6 @@ function CartPage() {
     return <div className="status-block">Loading cart...</div>;
   }
 
-  if (error) {
-    return <div className="status-block error">{error}</div>;
-  }
-
   const total = cartItems.reduce((sum, item) => {
     const price = item.product?.price || 0;
     return sum + price * item.qty;
@@ -68,6 +84,8 @@ function CartPage() {
       <div className="container">
         <p className="kicker">Checkout</p>
         <h1 className="section-title">Shopping Cart</h1>
+        {message && <p className="success">{message}</p>}
+        {error && <p className="error">{error}</p>}
 
         {cartItems.length === 0 ? (
           <div className="empty-state">
@@ -90,15 +108,40 @@ function CartPage() {
                     <p className="muted">Quantity: {item.qty}</p>
                   </div>
                 </div>
-                <strong>
-                  {formatPrice((item.product?.price || 0) * item.qty)}
-                </strong>
+                <strong>{formatPrice((item.product?.price || 0) * item.qty)}</strong>
               </article>
             ))}
 
+            <form className="form" style={{ maxWidth: 480, marginTop: 24 }}>
+              <label htmlFor="address">Pickup / shipping address</label>
+              <input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+              <label htmlFor="city">City</label>
+              <input
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                required
+              />
+              <label htmlFor="payment">Payment method</label>
+              <select
+                id="payment"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              >
+                <option>Cash on Pickup</option>
+                <option>GCash</option>
+                <option>PayPal</option>
+              </select>
+            </form>
+
             <div className="cart-total">
               <h3>Total {formatPrice(total)}</h3>
-              <Button>Proceed to Checkout</Button>
+              <Button onClick={checkout}>Place Order</Button>
             </div>
           </div>
         )}
