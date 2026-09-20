@@ -6,15 +6,20 @@ import {
   updateProduct,
   deleteProduct,
 } from '../controllers/productController.js';
-import { admin, protect } from '../middleware/authMiddleware.js';
+import authentication from '../middleware/authentication.js';
+import authorize from '../middleware/authorization.js';
 
 const router = express.Router();
 
-router.route('/').get(getProducts).post(protect, admin, createProduct);
+router
+  .route('/')
+  .get(getProducts)
+  .post(authentication, authorize('Admin'), createProduct);
+
 router
   .route('/:id')
   .get(getProductById)
-  .put(protect, admin, updateProduct)
-  .delete(protect, admin, deleteProduct);
+  .put(authentication, authorize('Admin'), updateProduct)
+  .delete(authentication, authorize('Admin'), deleteProduct);
 
 export default router;

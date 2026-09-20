@@ -31,8 +31,9 @@ export const getOrderById = async (req, res) => {
     }
 
     const isOwner = order.user._id.toString() === req.user._id.toString();
-    if (!req.user.isAdmin && !isOwner) {
-      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Not authorized' });
+    const isAdmin = req.user.role === 'Admin' || req.user.isAdmin;
+    if (!isAdmin && !isOwner) {
+      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Access denied' });
     }
 
     res.status(HttpStatus.OK).json(order);

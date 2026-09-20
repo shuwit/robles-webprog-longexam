@@ -6,16 +6,18 @@ const formatUser = (user) => ({
   _id: user._id,
   name: user.name,
   email: user.email,
-  isAdmin: user.isAdmin,
+  role: user.role,
+  isAdmin: user.role === 'Admin' || user.isAdmin,
   isActive: user.isActive,
-  token: generateToken(user._id),
+  token: generateToken(user),
 });
 
 const publicUser = (user) => ({
   _id: user._id,
   name: user.name,
   email: user.email,
-  isAdmin: user.isAdmin,
+  role: user.role,
+  isAdmin: user.role === 'Admin' || user.isAdmin,
   isActive: user.isActive,
 });
 
@@ -64,7 +66,13 @@ export const registerUser = async (req, res) => {
       return res.status(HttpStatus.BAD_REQUEST).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: 'Customer',
+    });
+
     res.status(HttpStatus.CREATED).json(formatUser(user));
   } catch (error) {
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
@@ -146,6 +154,15 @@ export const changePassword = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
+    const isOwner = req.user._id.toString() === req.params.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!isAdmin && !isOwner) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        message: 'Forbidden. You can only edit your own account.',
+      });
+    }
+
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -155,16 +172,23 @@ export const updateUser = async (req, res) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 
-    if (req.body.isAdmin !== undefined) {
-      user.isAdmin = req.body.isAdmin;
-    }
+    if (isAdmin) {
+      if (req.body.role !== undefined) {
+        user.role = req.body.role;
+      }
 
-    if (req.body.isActive !== undefined) {
-      user.isActive = req.body.isActive;
-    }
+      if (req.body.isAdmin !== undefined) {
+        user.isAdmin = req.body.isAdmin;
+        user.role = req.body.isAdmin ? 'Admin' : 'Customer';
+      }
 
-    if (req.body.password) {
-      user.password = req.body.password;
+      if (req.body.isActive !== undefined) {
+        user.isActive = req.body.isActive;
+      }
+
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
     }
 
     const updatedUser = await user.save();
@@ -187,3 +211,6 @@ export const deleteUser = async (req, res) => {
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
+
+export const login = authUser;
+export const register = registerUser;

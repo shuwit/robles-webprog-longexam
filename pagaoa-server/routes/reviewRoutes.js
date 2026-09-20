@@ -7,16 +7,18 @@ import {
   updateReview,
   deleteReview,
 } from '../controllers/reviewController.js';
-import { admin, protect } from '../middleware/authMiddleware.js';
+import authentication from '../middleware/authentication.js';
+import authorize from '../middleware/authorization.js';
 
 const router = express.Router();
 
-router.route('/').get(getReviews).post(protect, createReview);
+router.route('/').get(getReviews).post(authentication, createReview);
 router.get('/product/:productId', getReviewsByProduct);
+
 router
   .route('/:id')
   .get(getReviewById)
-  .put(protect, admin, updateReview)
-  .delete(protect, admin, deleteReview);
+  .put(authentication, authorize('Admin'), updateReview)
+  .delete(authentication, authorize('Admin'), deleteReview);
 
 export default router;

@@ -19,8 +19,9 @@ export const getCarts = async (req, res) => {
 
 export const getCartByUser = async (req, res) => {
   try {
-    if (!req.user.isAdmin && req.params.userId !== req.user._id.toString()) {
-      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Not authorized' });
+    const isAdmin = req.user.role === 'Admin' || req.user.isAdmin;
+    if (!isAdmin && req.params.userId !== req.user._id.toString()) {
+      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Access denied' });
     }
 
     const cart = await populateCart(Cart.findOne({ user: req.params.userId }));
@@ -82,6 +83,11 @@ export const updateCartItem = async (req, res) => {
   const { productId, qty } = req.body;
 
   try {
+    const isAdmin = req.user.role === 'Admin' || req.user.isAdmin;
+    if (!isAdmin && req.params.userId !== req.user._id.toString()) {
+      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Access denied' });
+    }
+
     const cart = await Cart.findOne({ user: req.params.userId });
 
     if (!cart) {
@@ -108,6 +114,11 @@ export const updateCartItem = async (req, res) => {
 
 export const deleteCart = async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'Admin' || req.user.isAdmin;
+    if (!isAdmin && req.params.userId !== req.user._id.toString()) {
+      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Access denied' });
+    }
+
     const cart = await Cart.findOneAndDelete({ user: req.params.userId });
 
     if (!cart) {

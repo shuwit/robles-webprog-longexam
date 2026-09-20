@@ -8,4 +8,6 @@ const HttpStatus = {
   INTERNAL_SERVER_ERROR: 500,
 };
 
-export { HttpStatus };
+const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
+
+export { HttpStatus, SECRET_KEY };

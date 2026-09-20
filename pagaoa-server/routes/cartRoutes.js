@@ -6,15 +6,20 @@ import {
   updateCartItem,
   deleteCart,
 } from '../controllers/cartController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import authentication from '../middleware/authentication.js';
+import authorize from '../middleware/authorization.js';
 
 const router = express.Router();
 
-router.route('/').get(protect, getCarts).post(protect, addToCart);
+router
+  .route('/')
+  .get(authentication, authorize('Admin'), getCarts)
+  .post(authentication, addToCart);
+
 router
   .route('/:userId')
-  .get(protect, getCartByUser)
-  .put(protect, updateCartItem)
-  .delete(protect, deleteCart);
+  .get(authentication, getCartByUser)
+  .put(authentication, updateCartItem)
+  .delete(authentication, deleteCart);
 
 export default router;

@@ -19,6 +19,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      required: true,
+      enum: ['Customer', 'Admin'],
+      default: 'Customer',
+    },
     isAdmin: {
       type: Boolean,
       required: true,
@@ -40,6 +46,12 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 userSchema.pre('save', async function () {
+  if (this.isModified('role')) {
+    this.isAdmin = this.role === 'Admin';
+  } else if (this.isModified('isAdmin')) {
+    this.role = this.isAdmin ? 'Admin' : 'Customer';
+  }
+
   if (!this.isModified('password')) {
     return;
   }
