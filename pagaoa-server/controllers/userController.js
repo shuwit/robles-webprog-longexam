@@ -1,6 +1,10 @@
 import User from '../models/userModel.js';
 import generateToken from '../utils/generateToken.js';
 import { HttpStatus } from '../config/constants.js';
+import {
+  recordFailedLogin,
+  clearFailedLogins,
+} from '../middleware/rateLimiterMiddleware.js';
 
 const formatUser = (user) => ({
   _id: user._id,
@@ -86,9 +90,14 @@ export const authUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user || !(await user.matchPassword(password))) {
-      return res
-        .status(HttpStatus.UNAUTHORIZED)
-        .json({ message: 'Invalid email or password' });
+      const attempt = recordFailedLogin(email);
+      return res.status(HttpStatus.UNAUTHORIZED).json({
+        message: 'Invalid email or password',
+        failedAttempts: attempt.count,
+        lockMinutes: attempt.lockedUntil
+          ? Math.ceil((attempt.lockedUntil - Date.now()) / 60000)
+          : 0,
+      });
     }
 
     if (user.isActive === false) {
@@ -97,6 +106,7 @@ export const authUser = async (req, res) => {
       });
     }
 
+    clearFailedLogins(email);
     return res.status(HttpStatus.OK).json(formatUser(user));
   } catch (error) {
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
