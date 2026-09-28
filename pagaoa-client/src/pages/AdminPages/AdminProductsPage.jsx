@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import Button from "../../components/Button";
 import AdminTabs from "../../components/AdminTabs";
 import { useAuth } from "../../context/AuthContext";
-import { apiRequest, formatPrice, unwrapProducts } from "../../utils/api";
+import { apiFormRequest, apiRequest, formatPrice, unwrapProducts } from "../../utils/api";
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const emptyForm = {
   name: "",
@@ -21,6 +24,8 @@ const AdminProductsPage = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -52,36 +57,95 @@ const AdminProductsPage = () => {
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const clearPreview = () => {
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl("");
+    setImageFile(null);
+  };
+
+  const onFileChange = (e) => {
+    const nextFile = e.target.files?.[0] || null;
+    setError("");
+
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    if (!nextFile) {
+      setImageFile(null);
+      setPreviewUrl(form.image || "");
+      return;
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(nextFile.type)) {
+      setImageFile(null);
+      setPreviewUrl(form.image || "");
+      e.target.value = "";
+      setError("Only JPEG, PNG, and WebP images are allowed.");
+      return;
+    }
+
+    if (nextFile.size > MAX_IMAGE_BYTES) {
+      setImageFile(null);
+      setPreviewUrl(form.image || "");
+      e.target.value = "";
+      setError("Image must be 5 MB or smaller.");
+      return;
+    }
+
+    setImageFile(nextFile);
+    setPreviewUrl(URL.createObjectURL(nextFile));
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      const body = {
-        ...form,
-        price: Number(form.price),
-        stock: Number(form.stock),
-      };
-      if (editId) {
-        await apiRequest(`/api/products/${editId}`, {
-          method: "PUT",
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("name", form.name);
+        formData.append("description", form.description);
+        formData.append("price", form.price);
+        formData.append("stock", form.stock);
+        formData.append("category", form.category);
+        formData.append("supplier", form.supplier);
+        formData.append("image", imageFile);
+
+        await apiFormRequest(editId ? `/api/products/${editId}` : "/api/products", {
+          method: editId ? "PUT" : "POST",
           token: userInfo.token,
-          body,
+          formData,
         });
-        setMessage("Product updated");
       } else {
-        await apiRequest("/api/products", {
-          method: "POST",
-          token: userInfo.token,
-          body,
-        });
-        setMessage("Product created");
+        const body = {
+          ...form,
+          price: Number(form.price),
+          stock: Number(form.stock),
+        };
+        if (editId) {
+          await apiRequest(`/api/products/${editId}`, {
+            method: "PUT",
+            token: userInfo.token,
+            body,
+          });
+        } else {
+          await apiRequest("/api/products", {
+            method: "POST",
+            token: userInfo.token,
+            body,
+          });
+        }
       }
+      setMessage(editId ? "Product updated" : "Product created");
       setForm({
         ...emptyForm,
         category: categories[0]?._id || "",
         supplier: suppliers[0]?._id || "",
       });
       setEditId("");
+      clearPreview();
       load();
     } catch (err) {
       setError(err.message);
@@ -89,7 +153,12 @@ const AdminProductsPage = () => {
   };
 
   const startEdit = (product) => {
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setEditId(product._id);
+    setImageFile(null);
+    setPreviewUrl(product.image || "");
     setForm({
       name: product.name,
       description: product.description,
@@ -133,7 +202,24 @@ const AdminProductsPage = () => {
             </div>
           </div>
           <label htmlFor="product-image">Image URL</label>
-          <input id="product-image" name="image" placeholder="Image URL" value={form.image} onChange={onChange} required />
+          <input
+            id="product-image"
+            name="image"
+            placeholder="Image URL, or upload a file below"
+            value={form.image}
+            onChange={onChange}
+            required={!imageFile}
+          />
+          <label htmlFor="product-file">Upload image (JPEG, PNG, or WebP, max 5 MB)</label>
+          <input
+            id="product-file"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={onFileChange}
+          />
+          {previewUrl && (
+            <img className="image-preview" src={previewUrl} alt="Selected product preview" />
+          )}
           <label htmlFor="product-category">Category</label>
           <select id="product-category" name="category" value={form.category} onChange={onChange}>
             {categories.map((item) => (

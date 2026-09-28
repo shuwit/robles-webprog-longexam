@@ -32,6 +32,27 @@ export const apiRequest = async (path, { method = "GET", token, body } = {}) => 
   return data;
 };
 
+export const apiFormRequest = async (path, { method = "POST", token, formData } = {}) => {
+  let res;
+  try {
+    res = await fetch(path, {
+      method,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+  } catch {
+    throw new Error("Server error. Please try again later.");
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.message || "Request failed");
+  }
+
+  return data;
+};
+
 export const addToCartRequest = async (userInfo, productId, qty = 1) =>
   apiRequest("/api/cart", {
     method: "POST",

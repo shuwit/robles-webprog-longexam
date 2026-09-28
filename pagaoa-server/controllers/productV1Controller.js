@@ -2,6 +2,11 @@ import Product from '../models/productModel.js';
 import { HttpStatus } from '../config/constants.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 import { listProducts, getPopulatedProduct } from '../utils/productQuery.js';
+import {
+  attachUploadedImage,
+  removeStoredImage,
+  stripImagePublicId,
+} from '../utils/productImage.js';
 
 export const getProductsV1 = async (req, res) => {
   try {
@@ -39,7 +44,8 @@ export const getProductByIdV1 = async (req, res) => {
 
 export const createProductV1 = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const payload = await attachUploadedImage(stripImagePublicId(req.body), req.file);
+    const product = await Product.create(payload);
     return sendSuccess(res, {
       status: HttpStatus.CREATED,
       message: 'Product created successfully.',
@@ -56,17 +62,24 @@ export const createProductV1 = async (req, res) => {
 
 export const updateProductV1 = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const existing = await Product.findById(req.params.id);
 
-    if (!product) {
+    if (!existing) {
       return sendError(res, {
         status: HttpStatus.NOT_FOUND,
         message: 'Product not found',
       });
     }
+
+    const payload = await attachUploadedImage(
+      stripImagePublicId(req.body),
+      req.file,
+      existing.imagePublicId
+    );
+    const product = await Product.findByIdAndUpdate(req.params.id, payload, {
+      new: true,
+      runValidators: true,
+    });
 
     return sendSuccess(res, {
       message: 'Product updated successfully.',
@@ -83,7 +96,7 @@ export const updateProductV1 = async (req, res) => {
 
 export const deleteProductV1 = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return sendError(res, {
@@ -91,6 +104,9 @@ export const deleteProductV1 = async (req, res) => {
         message: 'Product not found',
       });
     }
+
+    await removeStoredImage(product.imagePublicId);
+    await product.deleteOne();
 
     return sendSuccess(res, {
       message: 'Product deleted successfully.',

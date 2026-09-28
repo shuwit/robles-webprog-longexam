@@ -764,6 +764,18 @@ textarea {
   margin: 12px 0;
 }
 
+input[type="file"] {
+  color: var(--gold-soft);
+}
+
+.image-preview {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+}
+
 .review-list {
   display: grid;
   gap: 14px;
