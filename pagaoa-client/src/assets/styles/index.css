@@ -608,6 +608,51 @@ input:focus {
   border-radius: 14px;
 }
 
+.qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.qty-controls button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.qty-controls button:hover {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+.qty-controls span {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.cart-item-side {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.cart-remove {
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .cart-total {
   display: flex;
   justify-content: flex-end;

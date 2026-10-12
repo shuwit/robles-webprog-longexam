@@ -102,9 +102,48 @@ export const updateCartItem = async (req, res) => {
       return res.status(HttpStatus.NOT_FOUND).json({ message: 'Item not found in cart' });
     }
 
-    item.qty = qty;
+    const nextQty = Number(qty);
+
+    if (!Number.isInteger(nextQty) || nextQty < 1) {
+      cart.cartItems = cart.cartItems.filter(
+        (cartItem) => cartItem.product.toString() !== productId
+      );
+    } else {
+      item.qty = nextQty;
+    }
+
     await cart.save();
 
+    const populated = await populateCart(Cart.findById(cart._id));
+    res.status(HttpStatus.OK).json(populated);
+  } catch (error) {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+  }
+};
+
+export const removeCartItem = async (req, res) => {
+  try {
+    const isAdmin = req.user.role === 'Admin' || req.user.isAdmin;
+    if (!isAdmin && req.params.userId !== req.user._id.toString()) {
+      return res.status(HttpStatus.FORBIDDEN).json({ message: 'Access denied' });
+    }
+
+    const cart = await Cart.findOne({ user: req.params.userId });
+
+    if (!cart) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Cart not found' });
+    }
+
+    const before = cart.cartItems.length;
+    cart.cartItems = cart.cartItems.filter(
+      (cartItem) => cartItem.product.toString() !== req.params.productId
+    );
+
+    if (cart.cartItems.length === before) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Item not found in cart' });
+    }
+
+    await cart.save();
     const populated = await populateCart(Cart.findById(cart._id));
     res.status(HttpStatus.OK).json(populated);
   } catch (error) {

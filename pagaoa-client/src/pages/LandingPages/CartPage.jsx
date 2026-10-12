@@ -36,6 +36,41 @@ function CartPage() {
     loadCart();
   }, [userInfo]);
 
+  const productIdOf = (item) => item.product?._id || item.product;
+
+  const changeQty = async (item, nextQty) => {
+    setError("");
+    setMessage("");
+    try {
+      const data = await apiRequest(`/api/cart/${userInfo._id}`, {
+        method: "PUT",
+        token: userInfo.token,
+        body: { productId: productIdOf(item), qty: nextQty },
+      });
+      setCartItems(data.cartItems || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const removeItem = async (item) => {
+    setError("");
+    setMessage("");
+    try {
+      const data = await apiRequest(
+        `/api/cart/${userInfo._id}/items/${productIdOf(item)}`,
+        {
+          method: "DELETE",
+          token: userInfo.token,
+        }
+      );
+      setCartItems(data.cartItems || []);
+      setMessage("Item removed from cart");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const checkout = async () => {
     setError("");
     try {
@@ -105,10 +140,35 @@ function CartPage() {
                   />
                   <div>
                     <h3>{item.product?.name || "Product"}</h3>
-                    <p className="muted">Quantity: {item.qty}</p>
+                    <div className="qty-controls">
+                      <button
+                        type="button"
+                        onClick={() => changeQty(item, item.qty - 1)}
+                        aria-label={`Decrease ${item.product?.name || "item"} quantity`}
+                      >
+                        −
+                      </button>
+                      <span>{item.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => changeQty(item, item.qty + 1)}
+                        aria-label={`Increase ${item.product?.name || "item"} quantity`}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <strong>{formatPrice((item.product?.price || 0) * item.qty)}</strong>
+                <div className="cart-item-side">
+                  <strong>{formatPrice((item.product?.price || 0) * item.qty)}</strong>
+                  <button
+                    type="button"
+                    className="cart-remove"
+                    onClick={() => removeItem(item)}
+                  >
+                    Remove
+                  </button>
+                </div>
               </article>
             ))}
 
